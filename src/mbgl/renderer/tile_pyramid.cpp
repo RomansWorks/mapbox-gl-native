@@ -171,7 +171,7 @@ void TilePyramid::update(const std::vector<Immutable<style::Layer::Impl>>& layer
         cache.setSize(conservativeCacheSize);
     }
 
-    removeStaleTiles(retain);
+    removeStaleTiles(retain, needsRelayout);
 
     for (auto& pair : tiles) {
         const PlacementConfig config { parameters.transformState.getAngle(),
@@ -185,15 +185,17 @@ void TilePyramid::update(const std::vector<Immutable<style::Layer::Impl>>& layer
 }
 
 // Moves all tiles to the cache except for those specified in the retain set.
-void TilePyramid::removeStaleTiles(const std::set<OverscaledTileID>& retain) {
+void TilePyramid::removeStaleTiles(const std::set<OverscaledTileID>& retain, const bool needsRelayout) {
     // Remove stale tiles. This goes through the (sorted!) tiles map and retain set in lockstep
     // and removes items from tiles that don't have the corresponding key in the retain set.
     auto tilesIt = tiles.begin();
     auto retainIt = retain.begin();
     while (tilesIt != tiles.end()) {
         if (retainIt == retain.end() || tilesIt->first < *retainIt) {
-            tilesIt->second->setNecessity(Tile::Necessity::Optional);
-            cache.add(tilesIt->first, std::move(tilesIt->second));
+            if (!needsRelayout) {
+                tilesIt->second->setNecessity(Tile::Necessity::Optional);
+                cache.add(tilesIt->first, std::move(tilesIt->second));
+            }
             tiles.erase(tilesIt++);
         } else {
             if (!(*retainIt < tilesIt->first)) {

@@ -63,7 +63,7 @@ public:
 
     bool enabled = false;
 
-    void removeStaleTiles(const std::set<OverscaledTileID>&);
+    void removeStaleTiles(const std::set<OverscaledTileID>&, bool needsRelayout);
 
     std::map<OverscaledTileID, std::unique_ptr<Tile>> tiles;
     TileCache cache;
